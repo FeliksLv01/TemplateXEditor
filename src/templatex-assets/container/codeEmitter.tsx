@@ -1,13 +1,18 @@
-import { generateJSXCode } from '@ant-design/pro-editor';
 import type { ContainerConfig } from '@/types/component';
 
 export const containerCodeEmitter = (config: ContainerConfig) => {
-  const style = config.style || {};
-  
   const dsl = {
     type: 'container',
     id: `container_${Date.now()}`,
-    style: style,
+    style: {
+      flexDirection: config.flexDirection,
+      justifyContent: config.justifyContent,
+      alignItems: config.alignItems,
+      padding: config.padding,
+      backgroundColor: config.backgroundColor,
+      width: config.width,
+      height: config.height,
+    },
     children: [],
   };
   

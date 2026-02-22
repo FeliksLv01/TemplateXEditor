@@ -1,14 +1,23 @@
 import type { TextConfig } from '@/types/component';
 
 export const textCodeEmitter = (config: TextConfig) => {
-  const props = config.props || {};
-  const style = config.style || {};
-  
   const dsl = {
     type: 'text',
     id: `text_${Date.now()}`,
-    props: props,
-    style: style,
+    props: {
+      text: config.text,
+    },
+    style: {
+      fontSize: config.fontSize,
+      fontWeight: config.fontWeight,
+      textColor: config.textColor,
+      textAlign: config.textAlign,
+      lineHeight: config.lineHeight,
+      letterSpacing: config.letterSpacing,
+      numberOfLines: config.numberOfLines,
+      width: config.width,
+      height: config.height,
+    },
     children: undefined,
   };
   

@@ -12,13 +12,17 @@ export const buttonAssetParams: ComponentAssetParams<any> = {
   },
   models: [buttonModel],
   defaultConfig: {
-    title: 'Button',
-    backgroundColor: '#1890FF',
-    cornerRadius: 8,
-    textColor: '#FFFFFF',
-    fontWeight: '500',
-    width: 'auto',
-    height: 44,
+    props: {
+      title: 'Button',
+    },
+    style: {
+      backgroundColor: '#1890FF',
+      cornerRadius: 8,
+      textColor: '#FFFFFF',
+      fontWeight: '500',
+      width: 'auto',
+      height: 44,
+    },
   },
   codeEmitter: buttonCodeEmitter as any,
 };

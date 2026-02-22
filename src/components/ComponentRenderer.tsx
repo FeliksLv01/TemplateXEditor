@@ -53,7 +53,7 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ component,
         }}
         onClick={handleClick}
       >
-        {component.props.text || ''}
+        {component.props?.text || ''}
       </div>
     );
   };
@@ -62,7 +62,7 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ component,
     return (
       <img
         className="dsl-image"
-        src={component.props.src || ''}
+        src={component.props?.src || ''}
         alt="DSL Image"
         style={{
           ...mapStyle(component.style),
@@ -87,7 +87,7 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ component,
         }}
         onClick={handleClick}
       >
-        {component.props.title || 'Button'}
+        {component.props?.title || 'Button'}
       </button>
     );
   };
@@ -107,7 +107,7 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ component,
         <div style={{ padding: '20px', color: '#999', textAlign: 'center', width: '100%' }}>
           List Component
           <br />
-          <small>{component.style.direction === 'vertical' ? '纵向' : '横向'}列表</small>
+          <small>{component.style?.direction === 'vertical' ? '纵向' : '横向'}列表</small>
         </div>
       </div>
     );
@@ -180,7 +180,33 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ component,
           mapped.flexBasis = value;
           break;
         case 'width':
+          if (typeof value === 'number') {
+            mapped.width = `${value}px`;
+          } else if (typeof value === 'string') {
+            if (value === 'auto') {
+              // auto 时使用 fit-content，让宽度根据内容自适应
+              mapped.width = 'fit-content';
+            } else if (value === '100%' || value.endsWith('%') || value.endsWith('px') || value.endsWith('vw') || value.endsWith('vh')) {
+              mapped.width = value;
+            } else {
+              mapped.width = `${value}px`;
+            }
+          }
+          break;
         case 'height':
+          if (typeof value === 'number') {
+            mapped.height = `${value}px`;
+          } else if (typeof value === 'string') {
+            if (value === 'auto') {
+              // auto 时使用 fit-content，让高度根据内容自适应
+              mapped.height = 'fit-content';
+            } else if (value === '100%' || value.endsWith('%') || value.endsWith('px') || value.endsWith('vw') || value.endsWith('vh')) {
+              mapped.height = value;
+            } else {
+              mapped.height = `${value}px`;
+            }
+          }
+          break;
         case 'minWidth':
         case 'minHeight':
         case 'maxWidth':
@@ -197,28 +223,40 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ component,
         case 'marginRight':
         case 'fontSize':
         case 'letterSpacing':
-        case 'cornerRadius':
         case 'borderWidth':
-        case 'shadowRadius':
           if (typeof value === 'number') {
-            mapped[key] = `${value}px`;
+            (mapped as Record<string, unknown>)[key] = `${value}px`;
           } else if (typeof value === 'string') {
             if (value === 'auto' || value === '100%' || value.endsWith('%') || value.endsWith('px') || value.endsWith('vw') || value.endsWith('vh')) {
-              mapped[key] = value;
+              (mapped as Record<string, unknown>)[key] = value;
             } else {
-              mapped[key] = `${value}px`;
+              (mapped as Record<string, unknown>)[key] = `${value}px`;
+            }
+          }
+          break;
+        case 'shadowRadius':
+          // shadowRadius is handled separately with shadowColor
+          break;
+        case 'cornerRadius':
+          if (typeof value === 'number') {
+            mapped.borderRadius = `${value}px`;
+          } else if (typeof value === 'string') {
+            if (value === 'auto' || value === '100%' || value.endsWith('%') || value.endsWith('px') || value.endsWith('vw') || value.endsWith('vh')) {
+              mapped.borderRadius = value;
+            } else {
+              mapped.borderRadius = `${value}px`;
             }
           }
           break;
         case 'backgroundColor':
-          mapped.backgroundColor = value;
+          mapped.backgroundColor = mapColor(value);
           break;
         case 'borderColor':
-          mapped.borderColor = value;
+          mapped.borderColor = mapColor(value);
           break;
         case 'textColor':
         case 'color':
-          mapped.color = value;
+          mapped.color = mapColor(value);
           break;
         case 'shadowColor':
           mapped.boxShadow = `${style.shadowOffset?.width || 0}px ${style.shadowOffset?.height || 0}px ${style.shadowRadius || 0}px ${value}`;
@@ -261,7 +299,10 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({ component,
           }
           break;
         default:
-          mapped[key] = value;
+          // Only set if it's a valid CSS property to avoid type errors
+          if (key in document.createElement('div').style || ['gap', 'alignContent', 'alignSelf'].includes(key)) {
+            (mapped as Record<string, unknown>)[key] = value;
+          }
       }
     });
     

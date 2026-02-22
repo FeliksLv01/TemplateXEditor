@@ -12,6 +12,21 @@ import {
   deepCloneComponent,
   moveComponent,
 } from '@/utils/treeHelper';
+import { cleanComponentForExport } from '@/utils/dslCleaner';
+
+// 清理存储中的组件数据（修复旧版本存储的颜色对象格式）
+const cleanStoredComponent = (component: DSLComponent | null): DSLComponent | null => {
+  if (!component) return null;
+  return cleanComponentForExport(component);
+};
+
+const cleanStoredHistory = (history: { past: (DSLComponent | null)[]; present: DSLComponent | null; future: (DSLComponent | null)[] }) => {
+  return {
+    past: history.past.map(cleanStoredComponent),
+    present: cleanStoredComponent(history.present),
+    future: history.future.map(cleanStoredComponent),
+  };
+};
 
 const useEditorStore = create<EditorState>()(
   devtools(
@@ -42,7 +57,7 @@ const useEditorStore = create<EditorState>()(
         },
 
         addComponent: (parentId, component, index) => {
-          const { rootComponent, history } = get();
+          const { rootComponent } = get();
           
           if (!parentId && !rootComponent) {
             const newComponent = {
@@ -102,7 +117,26 @@ const useEditorStore = create<EditorState>()(
 
         removeComponent: (id) => {
           const { rootComponent, selectedComponentId } = get();
-          if (!rootComponent || rootComponent.id === id) return;
+          if (!rootComponent) return;
+          
+          // 如果删除的是根组件，直接清空
+          if (rootComponent.id === id) {
+            set(
+              (state) => ({
+                rootComponent: null,
+                history: {
+                  past: [...state.history.past, state.history.present].filter(Boolean),
+                  present: null,
+                  future: [],
+                },
+                selectedComponentId: null,
+                expandedKeys: [],
+              }),
+              false,
+              'removeComponent'
+            );
+            return;
+          }
           
           const newRoot = removeComponentFromParent(rootComponent, id);
           
@@ -138,6 +172,26 @@ const useEditorStore = create<EditorState>()(
             }),
             false,
             'updateComponent'
+          );
+        },
+
+        moveComponent: (componentId, newParentId, newIndex) => {
+          const { rootComponent } = get();
+          if (!rootComponent) return;
+          
+          const newRoot = moveComponent(rootComponent, componentId, newParentId, newIndex);
+          
+          set(
+            (state) => ({
+              rootComponent: newRoot,
+              history: {
+                past: [...state.history.past, state.history.present].filter(Boolean),
+                present: newRoot,
+                future: [],
+              },
+            }),
+            false,
+            'moveComponent'
           );
         },
 
@@ -237,6 +291,8 @@ const useEditorStore = create<EditorState>()(
 
         duplicateComponent: (id) => {
           const { rootComponent } = get();
+          if (!rootComponent) return;
+          
           const component = findComponentById(rootComponent, id);
           if (!component) return;
           
@@ -287,6 +343,19 @@ const useEditorStore = create<EditorState>()(
           rootComponent: state.rootComponent,
           history: state.history,
         }),
+        // 从存储中恢复数据后清理颜色格式
+        onRehydrateStorage: () => (state) => {
+          if (state) {
+            // 清理 rootComponent 中的颜色对象
+            if (state.rootComponent) {
+              state.rootComponent = cleanStoredComponent(state.rootComponent);
+            }
+            // 清理 history 中的颜色对象
+            if (state.history) {
+              state.history = cleanStoredHistory(state.history);
+            }
+          }
+        },
       }
     )
   )

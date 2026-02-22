@@ -9,9 +9,9 @@ export interface EditorState {
 
   // 历史记录
   history: {
-    past: DSLComponent[];
+    past: (DSLComponent | null)[];
     present: DSLComponent | null;
-    future: DSLComponent[];
+    future: (DSLComponent | null)[];
   };
 
   // 剪贴板
@@ -25,6 +25,7 @@ export interface EditorState {
   addComponent: (parentId: string | null, component: DSLComponent, index?: number) => void;
   removeComponent: (id: string) => void;
   updateComponent: (id: string, updates: Partial<DSLComponent>) => void;
+  moveComponent: (componentId: string, newParentId: string, newIndex?: number) => void;
   selectComponent: (id: string | null) => void;
   undo: () => void;
   redo: () => void;

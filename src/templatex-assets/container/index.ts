@@ -12,11 +12,14 @@ export const containerAssetParams: ComponentAssetParams<any> = {
   },
   models: [containerModel],
   defaultConfig: {
-    flexDirection: 'column',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    height: 'auto',
+    props: {},
+    style: {
+      flexDirection: 'column',
+      padding: 16,
+      backgroundColor: '#FFFFFF',
+      width: '100%',
+      height: 'auto',
+    },
   },
   codeEmitter: containerCodeEmitter as any,
 };

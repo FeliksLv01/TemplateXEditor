@@ -1,6 +1,5 @@
 import { Card, Col, Row, Typography } from 'antd';
 import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import { COMPONENT_DEFINITIONS } from '@/config/componentRegistry';
 
 const { Title } = Typography;
@@ -12,18 +11,18 @@ interface DraggableComponentProps {
 }
 
 const DraggableComponent = ({ type, name, icon }: DraggableComponentProps) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: type,
     data: { type },
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
-  };
-
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
+    <div 
+      ref={setNodeRef} 
+      style={{ opacity: isDragging ? 0.5 : 1 }} 
+      {...listeners} 
+      {...attributes}
+    >
       <Card
         hoverable
         style={{ textAlign: 'center', marginBottom: 12, cursor: 'grab' }}

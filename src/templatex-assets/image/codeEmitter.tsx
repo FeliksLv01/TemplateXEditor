@@ -1,14 +1,19 @@
 import type { ImageConfig } from '@/types/component';
 
 export const imageCodeEmitter = (config: ImageConfig) => {
-  const props = config.props || {};
-  const style = config.style || {};
-  
   const dsl = {
     type: 'image',
     id: `image_${Date.now()}`,
-    props: props,
-    style: style,
+    props: {
+      src: config.src,
+    },
+    style: {
+      width: config.width,
+      height: config.height,
+      objectFit: config.objectFit,
+      cornerRadius: config.cornerRadius,
+      backgroundColor: config.backgroundColor,
+    },
   };
   
   return JSON.stringify(dsl, null, 2);

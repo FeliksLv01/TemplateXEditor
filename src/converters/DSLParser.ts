@@ -1,5 +1,4 @@
 import type { DSLComponent } from '@/types/dsl';
-import merge from 'lodash.merge';
 
 export class DSLParser {
   static parse(jsonString: string): DSLComponent {

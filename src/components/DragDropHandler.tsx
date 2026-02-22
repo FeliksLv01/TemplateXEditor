@@ -1,7 +1,8 @@
 import { DndContext, DragOverlay, closestCenter, DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { useState } from 'react';
+import { message } from 'antd';
 import useEditorStore from '@/store/editorStore';
-import { COMPONENT_DEFINITIONS } from '@/config/componentRegistry';
+import { COMPONENT_DEFINITIONS, getComponentDefinition } from '@/config/componentRegistry';
 import { generateId } from '@/utils/idGenerator';
 
 export const DragDropHandler = ({ children }: { children: React.ReactNode }) => {
@@ -27,22 +28,43 @@ export const DragDropHandler = ({ children }: { children: React.ReactNode }) => 
 
     if (!over || !active) return;
 
-    const activeId = active.id as string;
     const overId = over.id as string;
 
     if (draggedComponentType && COMPONENT_DEFINITIONS.some(def => def.type === draggedComponentType)) {
       const componentDef = COMPONENT_DEFINITIONS.find(def => def.type === draggedComponentType);
       if (!componentDef) return;
 
+      // defaultConfig 现在包含 { props, style } 结构
+      const defaultConfig = componentDef.defaultConfig as { props?: Record<string, any>; style?: Record<string, any> };
+      
       const newComponent = {
         id: generateId(draggedComponentType),
         type: draggedComponentType,
-        props: { ...componentDef.defaultConfig },
-        style: { ...componentDef.defaultConfig },
+        props: { ...defaultConfig.props },
+        style: { ...defaultConfig.style },
         children: componentDef.canHaveChildren ? [] : undefined,
       };
 
-      addComponent(overId === 'tree-root' ? null : overId, newComponent);
+      // 当拖拽到 tree-root 时
+      if (overId === 'tree-root') {
+        if (!rootComponent) {
+          // 没有根组件，创建新的根组件
+          addComponent(null, newComponent);
+        } else {
+          // 已有根组件，检查是否是容器
+          const rootDef = getComponentDefinition(rootComponent.type);
+          if (rootDef?.canHaveChildren) {
+            // 根组件是容器，添加到根组件中
+            addComponent(rootComponent.id, newComponent);
+          } else {
+            // 根组件不是容器，给出提示
+            message.warning('当前根组件不是容器，请先删除后再添加新组件，或先添加一个容器作为根组件');
+          }
+        }
+      } else {
+        // 拖拽到具体的组件上
+        addComponent(overId, newComponent);
+      }
     }
   };
 

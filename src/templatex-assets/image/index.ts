@@ -12,9 +12,14 @@ export const imageAssetParams: ComponentAssetParams<any> = {
   },
   models: [imageModel],
   defaultConfig: {
-    src: 'https://via.placeholder.com/150',
-    width: 150,
-    height: 150,
+    props: {
+      src: 'https://via.placeholder.com/150',
+    },
+    style: {
+      width: 150,
+      height: 150,
+      objectFit: 'cover',
+    },
   },
   codeEmitter: imageCodeEmitter as any,
 };

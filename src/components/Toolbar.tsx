@@ -2,6 +2,7 @@ import { Button, Space, Modal, message } from 'antd';
 import { DownloadOutlined, ImportOutlined, UndoOutlined, RedoOutlined } from '@ant-design/icons';
 import { useState, useMemo } from 'react';
 import useEditorStore from '@/store/editorStore';
+import { cleanComponentForExport } from '@/utils/dslCleaner';
 
 export const Toolbar = () => {
   const { rootComponent, undo, redo, history } = useEditorStore();
@@ -23,14 +24,8 @@ export const Toolbar = () => {
       message.warning('请先创建组件');
       return;
     }
-    const dsl = {
-      type: rootComponent.type,
-      id: rootComponent.id,
-      props: rootComponent.props,
-      style: rootComponent.style,
-      children: rootComponent.children,
-    };
-    const json = JSON.stringify(dsl, null, 2);
+    const cleanedDsl = cleanComponentForExport(rootComponent);
+    const json = JSON.stringify(cleanedDsl, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -68,14 +63,8 @@ export const Toolbar = () => {
 
   const exportJson = useMemo(() => {
     if (!rootComponent) return '';
-    const dsl = {
-      type: rootComponent.type,
-      id: rootComponent.id,
-      props: rootComponent.props,
-      style: rootComponent.style,
-      children: rootComponent.children,
-    };
-    return JSON.stringify(dsl, null, 2);
+    const cleanedDsl = cleanComponentForExport(rootComponent);
+    return JSON.stringify(cleanedDsl, null, 2);
   }, [rootComponent]);
 
   const handleCopy = () => {

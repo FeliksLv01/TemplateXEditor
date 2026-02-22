@@ -1,4 +1,5 @@
 import type { DSLComponent } from '@/types/editor';
+import { generateId } from '@/utils/idGenerator';
 
 export function findComponentById(root: DSLComponent | null, id: string): DSLComponent | null {
   if (!root) return null;
@@ -116,7 +117,14 @@ export function updateComponentById(
   if (root.id === componentId) {
     return {
       ...root,
-      ...updates,
+      props: {
+        ...root.props,
+        ...updates.props,
+      },
+      style: {
+        ...root.style,
+        ...updates.style,
+      },
     };
   }
   
@@ -150,8 +158,12 @@ export function moveComponent(
 }
 
 export function convertToTreeData(component: DSLComponent): any {
+  // id 格式是 type_uuid，取 uuid 的前 6 位作为简短标识
+  const idParts = component.id.split('_');
+  const shortId = idParts.length > 1 ? idParts[1].slice(0, 6) : component.id.slice(0, 6);
+  
   return {
-    title: `${component.type} (${component.id.split('_')[0]})`,
+    title: `${component.type} (${shortId})`,
     key: component.id,
     children: component.children?.map(child => convertToTreeData(child)),
     data: component,

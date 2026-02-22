@@ -12,28 +12,28 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Container',
     icon: <AppstoreOutlined />,
     canHaveChildren: true,
-    defaultConfig: containerAssetParams.defaultConfig,
+    defaultConfig: containerAssetParams.defaultConfig || {},
   },
   {
     type: 'text',
     name: 'Text',
     icon: <FontSizeOutlined />,
     canHaveChildren: false,
-    defaultConfig: textAssetParams.defaultConfig,
+    defaultConfig: textAssetParams.defaultConfig || {},
   },
   {
     type: 'image',
     name: 'Image',
     icon: <PictureOutlined />,
     canHaveChildren: false,
-    defaultConfig: imageAssetParams.defaultConfig,
+    defaultConfig: imageAssetParams.defaultConfig || {},
   },
   {
     type: 'button',
     name: 'Button',
     icon: <BorderOutlined />,
     canHaveChildren: false,
-    defaultConfig: buttonAssetParams.defaultConfig,
+    defaultConfig: buttonAssetParams.defaultConfig || {},
   },
   {
     type: 'list',
@@ -41,7 +41,7 @@ export const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     icon: <BarsOutlined />,
     canHaveChildren: true,
     allowChildTypes: ['container', 'text', 'image', 'button'],
-    defaultConfig: listAssetParams.defaultConfig,
+    defaultConfig: listAssetParams.defaultConfig || {},
   },
 ];
 

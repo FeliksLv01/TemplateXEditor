@@ -12,12 +12,16 @@ export const textAssetParams: ComponentAssetParams<any> = {
   },
   models: [textModel],
   defaultConfig: {
-    text: 'Hello TemplateX!',
-    fontSize: 14,
-    fontWeight: 'normal',
-    textColor: '#333333',
-    textAlign: 'left',
-    lineHeight: 1.5,
+    props: {
+      text: 'Hello TemplateX!',
+    },
+    style: {
+      fontSize: 14,
+      fontWeight: 'normal',
+      textColor: '#333333',
+      textAlign: 'left',
+      lineHeight: 1.5,
+    },
   },
   codeEmitter: textCodeEmitter as any,
 };

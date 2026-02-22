@@ -1,4 +1,4 @@
-import { Layout, Typography, theme } from 'antd';
+import { Layout, Typography, theme, App as AntdApp } from 'antd';
 import ComponentPanel from './components/ComponentPanel';
 import ComponentTree from './components/ComponentTree';
 import PreviewCanvas from './components/PreviewCanvas';
@@ -10,9 +10,9 @@ import useHotkeys from './hooks/useHotkeys';
 const { Header, Sider, Content } = Layout;
 const { Title } = Typography;
 
-function App() {
+function AppContent() {
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
 
   useHotkeys();
@@ -49,6 +49,14 @@ function App() {
           </Layout>
         </Layout>
       </DragDropHandler>
+  );
+}
+
+function App() {
+  return (
+    <AntdApp>
+      <AppContent />
+    </AntdApp>
   );
 }
 
