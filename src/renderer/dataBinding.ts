@@ -20,23 +20,54 @@ export interface ResolvedComponent {
 }
 
 /**
+ * 解析值中的 ${} 内联表达式
+ * 只处理字符串类型，且包含 ${ 的值
+ */
+function resolveInlineExpressions(
+  obj: Record<string, any>,
+  data: Record<string, any>,
+): Record<string, any> {
+  const result = { ...obj };
+  for (const [key, value] of Object.entries(result)) {
+    if (typeof value === 'string' && value.includes('${')) {
+      const resolved = resolveString(value, data);
+      // 解析成功才覆盖（不等于原始表达式字符串）
+      if (resolved !== value) {
+        result[key] = resolved;
+      }
+    }
+  }
+  return result;
+}
+
+/**
  * 解析组件的数据绑定
  *
  * 流程：
  * 1. 以 component.props 和 component.style 为基础
- * 2. 遍历 component.bindings，对每个 key 用 mockData 求值
- * 3. 根据 key 是 props 还是 style，覆盖对应的值
- * 4. 返回解析后的 props 和 style（不修改原组件树）
+ * 2. 扫描 props/style 值中的 ${} 内联表达式，用 mockData 求值（兼容 iOS 写法）
+ * 3. 遍历 component.bindings，对每个 key 用 mockData 求值（编辑器标准写法）
+ * 4. bindings 的优先级高于内联表达式
+ * 5. 返回解析后的 props 和 style（不修改原组件树）
  */
 export function resolveBindings(
   component: DSLComponent,
   data: Record<string, any>,
 ): ResolvedComponent {
-  const resolvedProps = { ...(component.props || {}) };
-  const resolvedStyle = { ...(component.style || {}) };
+  const hasData = Object.keys(data).length > 0;
 
+  // 先解析 props/style 中的内联 ${} 表达式
+  let resolvedProps = { ...(component.props || {}) };
+  let resolvedStyle = { ...(component.style || {}) };
+
+  if (hasData) {
+    resolvedProps = resolveInlineExpressions(resolvedProps, data);
+    resolvedStyle = resolveInlineExpressions(resolvedStyle, data);
+  }
+
+  // 再用 bindings 覆盖（优先级更高）
   const bindings = component.bindings;
-  if (!bindings || Object.keys(bindings).length === 0 || Object.keys(data).length === 0) {
+  if (!bindings || Object.keys(bindings).length === 0 || !hasData) {
     return { props: resolvedProps, style: resolvedStyle };
   }
 

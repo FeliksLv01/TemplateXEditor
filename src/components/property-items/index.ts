@@ -1,2 +1,2 @@
-export { SizeInput } from './SizeInput';
-export { BoxModelInput } from './BoxModelInput';
+export { CompactSizeInput } from './CompactSizeInput';
+export { CompactSpacingInput } from './CompactSpacingInput';

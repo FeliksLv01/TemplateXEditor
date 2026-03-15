@@ -127,3 +127,546 @@ body {
   cursor: move;
   user-select: none;
 }
+
+/* ============================================================
+   Ant Design Tabs 滚动修复（右侧属性面板）
+   问题：Tabs 内部 DOM 链默认不约束高度，导致内容溢出不可滚动
+   修复：让 .ant-tabs 成为 flex column 填满父容器，
+         .ant-tabs-content-holder 填满剩余空间，
+         .ant-tabs-tabpane-active 内部滚动
+   ============================================================ */
+
+/* 右侧属性面板整体 flex 布局 */
+.right-sider {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.property-panel-tabs.ant-tabs {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+/* Tab 等分宽度 */
+.property-panel-tabs .ant-tabs-nav-list {
+  width: 100% !important;
+}
+
+.property-panel-tabs .ant-tabs-tab {
+  flex: 1 !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 8px 0 !important;
+}
+
+.property-panel-tabs .ant-tabs-content-holder {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.property-panel-tabs .ant-tabs-content {
+  height: 100% !important;
+}
+
+.property-panel-tabs .ant-tabs-tabpane {
+  height: 100% !important;
+  overflow-y: auto !important;
+}
+
+/* ============================================================
+   紧凑属性面板样式
+   参考 Figma 的设计面板美学：中性灰、细分割线、紧凑间距
+   ============================================================ */
+
+/* --- Section 分区 --- */
+.panel-section {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 10px 16px;
+}
+
+.panel-section:last-child {
+  border-bottom: none;
+}
+
+.panel-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding: 0 0 8px;
+}
+
+.panel-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-section-toggle {
+  font-size: 10px;
+  color: #bbb;
+  transition: transform 0.15s;
+}
+
+.panel-section-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+.panel-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* --- CompactSizeInput 紧凑尺寸输入 --- */
+.compact-size-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.compact-size-label {
+  font-size: 11px;
+  color: #999;
+  min-width: 14px;
+  flex-shrink: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.compact-size-field {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  background: #f5f5f5;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.compact-size-field:hover {
+  background: #ebebeb;
+}
+
+.compact-size-field:focus-within {
+  background: #fff;
+  border-color: #d9d9d9;
+}
+
+.compact-size-field.is-auto {
+  background: #fafafa;
+}
+
+.compact-size-number {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  color: #333;
+  padding: 0 6px;
+  font-family: inherit;
+}
+
+.compact-size-number::placeholder {
+  color: #bbb;
+}
+
+.compact-size-number:read-only {
+  cursor: default;
+}
+
+.compact-size-unit {
+  font-size: 10px;
+  color: #999;
+  padding: 0 6px 0 2px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: color 0.15s;
+  line-height: 28px;
+}
+
+.compact-size-unit:hover {
+  color: #1677ff;
+}
+
+/* 双列尺寸行 */
+.size-row {
+  display: flex;
+  gap: 8px;
+}
+
+.size-row > .compact-size-input {
+  flex: 1;
+}
+
+/* --- CompactSpacingInput 紧凑间距输入 --- */
+.compact-spacing-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compact-spacing-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-spacing-title {
+  font-size: 11px;
+  color: #999;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.compact-spacing-row {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.compact-spacing-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 2px;
+}
+
+.compact-spacing-dir-label {
+  font-size: 9px;
+  color: #bbb;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.compact-spacing-input {
+  width: 100%;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: #f5f5f5;
+  font-size: 12px;
+  color: #333;
+  text-align: center;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+
+.compact-spacing-input::placeholder {
+  color: #ccc;
+}
+
+.compact-spacing-input:hover {
+  background: #ebebeb;
+}
+
+.compact-spacing-input.focused,
+.compact-spacing-input:focus {
+  background: #fff;
+  border-color: #d9d9d9;
+}
+
+/* --- 属性面板内 Ant Design 表单微调 --- */
+.panel-section .ant-form-item {
+  margin-bottom: 0 !important;
+}
+
+.panel-section .ant-form-item-label {
+  padding-bottom: 2px !important;
+}
+
+.panel-section .ant-form-item-label > label {
+  font-size: 11px !important;
+  color: #666 !important;
+  height: auto !important;
+}
+
+/* 紧凑表单行：label 在左，控件在右 */
+.compact-form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.compact-form-label {
+  font-size: 11px;
+  color: #999;
+  width: 56px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.compact-form-control {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============================================================
+   左侧组件面板样式
+   ============================================================ */
+
+.comp-panel {
+  height: 100%;
+  overflow: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.comp-panel-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 2px 14px;
+}
+
+.comp-panel-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #1677ff, #4096ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.comp-panel-brand-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.comp-panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 2px 10px;
+}
+
+.comp-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.comp-panel-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 4px;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid transparent;
+  cursor: grab;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.comp-panel-item:hover {
+  background: #f0f0f0;
+  border-color: #e0e0e0;
+}
+
+.comp-panel-item:active {
+  cursor: grabbing;
+  background: #e8e8e8;
+  transform: scale(0.97);
+}
+
+.comp-panel-icon {
+  font-size: 20px;
+  color: #666;
+  line-height: 1;
+}
+
+.comp-panel-item:hover .comp-panel-icon {
+  color: #1677ff;
+}
+
+.comp-panel-name {
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* ============================================================
+   左侧组件树样式
+   ============================================================ */
+
+.comp-tree {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.comp-tree-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 14px 8px;
+  flex-shrink: 0;
+}
+
+.comp-tree-content {
+  flex: 1;
+  overflow: auto;
+  padding: 0 4px 12px;
+}
+
+/* 树节点自定义渲染 */
+.comp-tree-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comp-tree-node-icon {
+  font-size: 12px;
+  color: #999;
+  display: inline-flex;
+  align-items: center;
+}
+
+.comp-tree-node-label {
+  font-size: 13px;
+  color: #333;
+}
+
+/* 树整体样式覆盖 */
+.comp-tree-inner.ant-tree {
+  font-size: 13px;
+  background: transparent;
+}
+
+.comp-tree-inner .ant-tree-node-content-wrapper {
+  border-radius: 4px;
+  padding: 2px 4px;
+  transition: all 0.12s;
+  cursor: grab;
+}
+
+.comp-tree-inner .ant-tree-node-content-wrapper:active {
+  cursor: grabbing;
+}
+
+.comp-tree-inner .ant-tree-node-content-wrapper:hover {
+  background: #f5f5f5;
+}
+
+.comp-tree-inner .ant-tree-node-selected .ant-tree-node-content-wrapper,
+.comp-tree-inner .ant-tree-node-content-wrapper.ant-tree-node-selected {
+  background: #e6f4ff !important;
+}
+
+/* 隐藏默认 showIcon 的图标列，因为我们在 titleRender 中自己渲染 */
+.comp-tree-inner .ant-tree-iconEle {
+  display: none !important;
+}
+
+/* 隐藏拖拽手柄图标，整个节点直接拖拽 */
+.comp-tree-inner .ant-tree-draggable-icon {
+  display: none !important;
+}
+
+/* ============================================================
+   可拖拽调整宽度的面板手柄
+   ============================================================ */
+
+.resize-handle {
+  background: transparent;
+  transition: background-color 0.15s;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background-color: #1677ff;
+}
+
+/* ============================================================
+   Toolbar 工具栏
+   ============================================================ */
+
+.canvas-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 40px;
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #444;
+}
+
+.toolbar-btn:hover {
+  color: #1677ff !important;
+  background: #f0f0f0 !important;
+}
+
+.toolbar-btn-text {
+  height: 28px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  padding: 0 10px;
+}
+
+.toolbar-btn-text:hover {
+  color: #1677ff !important;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 16px;
+  background: #e0e0e0;
+  margin: 0 6px;
+}

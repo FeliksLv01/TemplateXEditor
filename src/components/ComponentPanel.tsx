@@ -1,8 +1,5 @@
-import { Card, Col, Row, Typography } from 'antd';
 import { useDraggable } from '@dnd-kit/core';
 import { COMPONENT_DEFINITIONS } from '@/config/componentRegistry';
-
-const { Title } = Typography;
 
 interface DraggableComponentProps {
   type: string;
@@ -17,41 +14,37 @@ const DraggableComponent = ({ type, name, icon }: DraggableComponentProps) => {
   });
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={{ opacity: isDragging ? 0.5 : 1 }} 
-      {...listeners} 
+    <div
+      ref={setNodeRef}
+      className="comp-panel-item"
+      style={{ opacity: isDragging ? 0.4 : 1 }}
+      {...listeners}
       {...attributes}
     >
-      <Card
-        hoverable
-        style={{ textAlign: 'center', marginBottom: 12, cursor: 'grab' }}
-        styles={{ body: { padding: '16px' } }}
-      >
-        <div style={{ fontSize: 24, marginBottom: 8 }}>{icon}</div>
-        <div style={{ fontSize: 12, fontWeight: 500 }}>{name}</div>
-      </Card>
+      <div className="comp-panel-icon">{icon}</div>
+      <div className="comp-panel-name">{name}</div>
     </div>
   );
 };
 
 export const ComponentPanel = () => {
   return (
-    <div style={{ height: '100%', overflow: 'auto', padding: 16 }}>
-      <Title level={5} style={{ marginBottom: 16 }}>
-        组件面板
-      </Title>
-      <Row gutter={[12, 12]}>
+    <div className="comp-panel">
+      <div className="comp-panel-brand">
+        <div className="comp-panel-logo">T</div>
+        <span className="comp-panel-brand-text">TemplateX Editor</span>
+      </div>
+      <div className="comp-panel-title">组件</div>
+      <div className="comp-panel-grid">
         {COMPONENT_DEFINITIONS.map((component) => (
-          <Col span={12} key={component.type}>
-            <DraggableComponent
-              type={component.type}
-              name={component.name}
-              icon={component.icon}
-            />
-          </Col>
+          <DraggableComponent
+            key={component.type}
+            type={component.type}
+            name={component.name}
+            icon={component.icon}
+          />
         ))}
-      </Row>
+      </div>
     </div>
   );
 };

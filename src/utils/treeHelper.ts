@@ -166,12 +166,8 @@ export function moveComponent(
 }
 
 export function convertToTreeData(component: DSLComponent): any {
-  // id 格式是 type_uuid，取 uuid 的前 6 位作为简短标识
-  const idParts = component.id.split('_');
-  const shortId = idParts.length > 1 ? idParts[1].slice(0, 6) : component.id.slice(0, 6);
-  
   return {
-    title: `${component.type} (${shortId})`,
+    title: component.type,
     key: component.id,
     children: component.children?.map(child => convertToTreeData(child)),
     data: component,

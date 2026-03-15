@@ -1,13 +1,10 @@
-import { Tree, Typography, Empty, Menu, message } from 'antd';
-import { FolderOutlined, FileOutlined } from '@ant-design/icons';
+import { Tree, Empty, Menu, message } from 'antd';
 import { useEffect, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import useEditorStore from '@/store/editorStore';
 import { convertToTreeData, findComponentById, findParentById } from '@/utils/treeHelper';
 import { getComponentDefinition } from '@/config/componentRegistry';
 import type { DataNode, TreeProps } from 'antd/es/tree';
-
-const { Title } = Typography;
 
 const DroppableWrapper = ({ children }: { children: React.ReactNode }) => {
   const { setNodeRef, isOver } = useDroppable({
@@ -194,16 +191,15 @@ export const ComponentTree = () => {
 
   return (
     <DroppableWrapper>
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Title level={5} style={{ padding: '16px 16px 12px', margin: 0 }}>
-          组件树
-        </Title>
-        <div style={{ flex: 1, overflow: 'auto', padding: '0 16px 16px' }}>
+      <div className="comp-tree">
+        <div className="comp-tree-title">结构</div>
+        <div className="comp-tree-content">
           <Tree
             showIcon
-            draggable
+            draggable={{ icon: false }}
             blockNode
             defaultExpandAll
+            className="comp-tree-inner"
             expandedKeys={expandedKeys}
             selectedKeys={selectedComponentId ? [selectedComponentId] : []}
             onSelect={onSelect}
@@ -211,11 +207,14 @@ export const ComponentTree = () => {
             onRightClick={handleContextMenu}
             onDrop={onDrop}
             treeData={treeData}
-            icon={(props: any) => {
-              const data = props.data;
-              const def = getComponentDefinition(data?.type);
-              const canHaveChildren = def?.canHaveChildren;
-              return canHaveChildren ? <FolderOutlined /> : <FileOutlined />;
+            titleRender={(nodeData: any) => {
+              const def = getComponentDefinition(nodeData.data?.type);
+              return (
+                <span className="comp-tree-node">
+                  <span className="comp-tree-node-icon">{def?.icon}</span>
+                  <span className="comp-tree-node-label">{nodeData.data?.type}</span>
+                </span>
+              );
             }}
           />
         </div>

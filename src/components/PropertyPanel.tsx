@@ -1,7 +1,6 @@
-import { Empty, Form, Input, InputNumber, Select, ColorPicker, Switch, Collapse, Tooltip, Segmented, Tabs, Alert, Button } from 'antd';
-import { Typography, Divider } from 'antd';
-import type { CollapseProps } from 'antd';
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { Empty, Form, Input, InputNumber, Select, ColorPicker, Switch, Tooltip, Segmented, Tabs, Alert, Button } from 'antd';
+import { Typography } from 'antd';
+import { Fragment, useMemo, useEffect, useState, useCallback } from 'react';
 import { JsonEditor } from './JsonEditor';
 import {
   ArrowRightOutlined,
@@ -16,13 +15,33 @@ import {
   ColumnHeightOutlined,
   BorderOutlined,
   MenuOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import useEditorStore from '@/store/editorStore';
 import { getComponentDefinition } from '@/config/componentRegistry';
-import { SizeInput, BoxModelInput } from './property-items';
+import { CompactSizeInput, CompactSpacingInput } from './property-items';
 import { cleanColorValue } from '@/utils/dslCleaner';
 
-// Typography sub-components used inline
+// ============================================================
+// 可折叠分区组件
+// ============================================================
+const PanelSection: React.FC<{
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}> = ({ title, defaultOpen = true, children }) => {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="panel-section">
+      <div className="panel-section-header" onClick={() => setOpen(!open)}>
+        <span className="panel-section-title">{title}</span>
+        <DownOutlined className={`panel-section-toggle ${open ? '' : 'collapsed'}`} />
+      </div>
+      {open && <div className="panel-section-body">{children}</div>}
+    </div>
+  );
+};
 
 // ============================================================
 // 数据绑定 Tab
@@ -36,7 +55,6 @@ const DataBindingTab: React.FC<{
   const [error, setError] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
-  // 组件切换或 bindings 外部变化时，重置编辑器内容
   useEffect(() => {
     const bindings = component.bindings || {};
     setJsonText(JSON.stringify(bindings, null, 2));
@@ -48,7 +66,6 @@ const DataBindingTab: React.FC<{
     setJsonText(text);
     setIsDirty(true);
 
-    // 实时校验 JSON 格式
     if (text.trim() === '' || text.trim() === '{}') {
       setError(null);
       return;
@@ -59,7 +76,6 @@ const DataBindingTab: React.FC<{
         setError('必须是一个 JSON 对象');
         return;
       }
-      // 校验每个 value 必须是 string
       for (const [key, value] of Object.entries(parsed)) {
         if (typeof value !== 'string') {
           setError(`"${key}" 的值必须是字符串（表达式）`);
@@ -230,7 +246,6 @@ export const PropertyPanel = () => {
     if (component) {
       form.resetFields();
       
-      // 清理颜色值，避免 ColorPicker 崩溃
       const cleanedProps = { ...component.props };
       const cleanedStyle = { ...component.style };
       
@@ -291,379 +306,382 @@ export const PropertyPanel = () => {
 
   const componentDef = getComponentDefinition(component.type);
 
-  // 尺寸面板
-  const sizePanel = {
-    key: 'size',
-    label: '尺寸',
-    children: (
-      <>
-        <Form.Item name="width" label="宽度" style={{ marginBottom: 12 }}>
-          <SizeInput />
-        </Form.Item>
-        <Form.Item name="height" label="高度" style={{ marginBottom: 12 }}>
-          <SizeInput />
-        </Form.Item>
-        <Form.Item name="minWidth" label="最小宽度" style={{ marginBottom: 12 }}>
-          <SizeInput />
-        </Form.Item>
-        <Form.Item name="minHeight" label="最小高度" style={{ marginBottom: 12 }}>
-          <SizeInput />
-        </Form.Item>
-        <Form.Item name="maxWidth" label="最大宽度" style={{ marginBottom: 12 }}>
-          <SizeInput />
-        </Form.Item>
-        <Form.Item name="maxHeight" label="最大高度" style={{ marginBottom: 12 }}>
-          <SizeInput />
-        </Form.Item>
-      </>
-    ),
-  };
+  // ============================================================
+  // 各分区渲染函数
+  // ============================================================
 
-  // Flexbox 布局面板
-  const flexboxPanel = {
-    key: 'flexbox',
-    label: 'Flexbox 布局',
-    children: (
-      <>
-        <Form.Item name="flexDirection" label="方向" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            options={[
-              { label: <Tooltip title="横向"><ArrowRightOutlined /></Tooltip>, value: 'row' },
-              { label: <Tooltip title="纵向"><ArrowDownOutlined /></Tooltip>, value: 'column' },
-              { label: <Tooltip title="横向反转"><ArrowRightOutlined style={{ transform: 'scaleX(-1)' }} /></Tooltip>, value: 'row-reverse' },
-              { label: <Tooltip title="纵向反转"><ArrowDownOutlined style={{ transform: 'scaleY(-1)' }} /></Tooltip>, value: 'column-reverse' },
-            ]}
-          />
+  // 尺寸分区 — 双列紧凑布局
+  const renderSizeSection = () => (
+    <PanelSection title="Size">
+      <div className="size-row">
+        <Form.Item name="width" noStyle>
+          <CompactSizeInput label="W" />
         </Form.Item>
-        <Form.Item name="justifyContent" label="主轴对齐" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            options={[
-              { label: <Tooltip title="起始"><AlignLeftOutlined /></Tooltip>, value: 'flex-start' },
-              { label: <Tooltip title="居中"><AlignCenterOutlined /></Tooltip>, value: 'center' },
-              { label: <Tooltip title="结束"><AlignRightOutlined /></Tooltip>, value: 'flex-end' },
-              { label: <Tooltip title="两端对齐"><ColumnWidthOutlined /></Tooltip>, value: 'space-between' },
-              { label: <Tooltip title="分散对齐"><MenuOutlined /></Tooltip>, value: 'space-around' },
-            ]}
-          />
+        <Form.Item name="height" noStyle>
+          <CompactSizeInput label="H" />
         </Form.Item>
-        <Form.Item name="alignItems" label="交叉轴对齐" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            options={[
-              { label: <Tooltip title="起始"><VerticalAlignTopOutlined /></Tooltip>, value: 'flex-start' },
-              { label: <Tooltip title="居中"><VerticalAlignMiddleOutlined /></Tooltip>, value: 'center' },
-              { label: <Tooltip title="结束"><VerticalAlignBottomOutlined /></Tooltip>, value: 'flex-end' },
-              { label: <Tooltip title="拉伸"><ColumnHeightOutlined /></Tooltip>, value: 'stretch' },
-              { label: <Tooltip title="基线"><BorderOutlined /></Tooltip>, value: 'baseline' },
-            ]}
-          />
+      </div>
+      <div className="size-row">
+        <Form.Item name="minWidth" noStyle>
+          <CompactSizeInput label="Min W" placeholder="--" />
         </Form.Item>
-        <Form.Item name="flexWrap" label="换行" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            options={[
-              { label: '不换行', value: 'nowrap' },
-              { label: '换行', value: 'wrap' },
-              { label: '反向换行', value: 'wrap-reverse' },
-            ]}
-          />
+        <Form.Item name="minHeight" noStyle>
+          <CompactSizeInput label="Min H" placeholder="--" />
         </Form.Item>
-        <Form.Item name="alignContent" label="多行对齐" style={{ marginBottom: 12 }}>
-          <Select size="small">
-            <Select.Option value="flex-start">起始</Select.Option>
-            <Select.Option value="center">居中</Select.Option>
-            <Select.Option value="flex-end">结束</Select.Option>
-            <Select.Option value="stretch">拉伸</Select.Option>
-            <Select.Option value="space-between">两端对齐</Select.Option>
-            <Select.Option value="space-around">分散对齐</Select.Option>
-          </Select>
+      </div>
+      <div className="size-row">
+        <Form.Item name="maxWidth" noStyle>
+          <CompactSizeInput label="Max W" placeholder="--" />
         </Form.Item>
-      </>
-    ),
-  };
+        <Form.Item name="maxHeight" noStyle>
+          <CompactSizeInput label="Max H" placeholder="--" />
+        </Form.Item>
+      </div>
+    </PanelSection>
+  );
 
-  // Flex 子元素属性面板
-  const flexItemPanel = {
-    key: 'flexItem',
-    label: 'Flex 子元素',
-    children: (
-      <>
-        <Form.Item name="flexGrow" label="放大比例 (grow)" style={{ marginBottom: 12 }}>
+  // Flexbox 布局分区
+  const renderFlexboxSection = () => (
+    <PanelSection title="Layout">
+      <Form.Item name="flexDirection" label="方向" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: <Tooltip title="横向"><ArrowRightOutlined /></Tooltip>, value: 'row' },
+            { label: <Tooltip title="纵向"><ArrowDownOutlined /></Tooltip>, value: 'column' },
+            { label: <Tooltip title="横向反转"><ArrowRightOutlined style={{ transform: 'scaleX(-1)' }} /></Tooltip>, value: 'row-reverse' },
+            { label: <Tooltip title="纵向反转"><ArrowDownOutlined style={{ transform: 'scaleY(-1)' }} /></Tooltip>, value: 'column-reverse' },
+          ]}
+        />
+      </Form.Item>
+      <Form.Item name="justifyContent" label="主轴对齐" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: <Tooltip title="起始"><AlignLeftOutlined /></Tooltip>, value: 'flex-start' },
+            { label: <Tooltip title="居中"><AlignCenterOutlined /></Tooltip>, value: 'center' },
+            { label: <Tooltip title="结束"><AlignRightOutlined /></Tooltip>, value: 'flex-end' },
+            { label: <Tooltip title="两端对齐"><ColumnWidthOutlined /></Tooltip>, value: 'space-between' },
+            { label: <Tooltip title="分散对齐"><MenuOutlined /></Tooltip>, value: 'space-around' },
+          ]}
+        />
+      </Form.Item>
+      <Form.Item name="alignItems" label="交叉轴对齐" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: <Tooltip title="起始"><VerticalAlignTopOutlined /></Tooltip>, value: 'flex-start' },
+            { label: <Tooltip title="居中"><VerticalAlignMiddleOutlined /></Tooltip>, value: 'center' },
+            { label: <Tooltip title="结束"><VerticalAlignBottomOutlined /></Tooltip>, value: 'flex-end' },
+            { label: <Tooltip title="拉伸"><ColumnHeightOutlined /></Tooltip>, value: 'stretch' },
+            { label: <Tooltip title="基线"><BorderOutlined /></Tooltip>, value: 'baseline' },
+          ]}
+        />
+      </Form.Item>
+      <Form.Item name="flexWrap" label="换行" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: '不换行', value: 'nowrap' },
+            { label: '换行', value: 'wrap' },
+            { label: '反向', value: 'wrap-reverse' },
+          ]}
+        />
+      </Form.Item>
+      <Form.Item name="alignContent" label="多行对齐" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: <Tooltip title="起始"><AlignLeftOutlined /></Tooltip>, value: 'flex-start' },
+            { label: <Tooltip title="居中"><AlignCenterOutlined /></Tooltip>, value: 'center' },
+            { label: <Tooltip title="结束"><AlignRightOutlined /></Tooltip>, value: 'flex-end' },
+            { label: <Tooltip title="拉伸"><ColumnHeightOutlined /></Tooltip>, value: 'stretch' },
+            { label: <Tooltip title="两端对齐"><ColumnWidthOutlined /></Tooltip>, value: 'space-between' },
+            { label: <Tooltip title="分散对齐"><MenuOutlined /></Tooltip>, value: 'space-around' },
+          ]}
+        />
+      </Form.Item>
+    </PanelSection>
+  );
+
+  // Flex 子元素分区
+  const renderFlexItemSection = () => (
+    <PanelSection title="Flex Item" defaultOpen={false}>
+      <div className="size-row">
+        <Form.Item name="flexGrow" label="Grow" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} />
         </Form.Item>
-        <Form.Item name="flexShrink" label="缩小比例 (shrink)" style={{ marginBottom: 12 }}>
+        <Form.Item name="flexShrink" label="Shrink" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} />
         </Form.Item>
-        <Form.Item name="flexBasis" label="基础尺寸 (basis)" style={{ marginBottom: 12 }}>
-          <SizeInput />
-        </Form.Item>
-        <Form.Item name="alignSelf" label="自身对齐" style={{ marginBottom: 12 }}>
-          <Select size="small">
-            <Select.Option value="auto">自动</Select.Option>
-            <Select.Option value="flex-start">起始</Select.Option>
-            <Select.Option value="center">居中</Select.Option>
-            <Select.Option value="flex-end">结束</Select.Option>
-            <Select.Option value="stretch">拉伸</Select.Option>
-            <Select.Option value="baseline">基线</Select.Option>
-          </Select>
-        </Form.Item>
-      </>
-    ),
-  };
+      </div>
+      <Form.Item name="flexBasis" noStyle>
+        <CompactSizeInput label="Basis" />
+      </Form.Item>
+      <Form.Item name="alignSelf" label="自身对齐" style={{ marginBottom: 0 }}>
+        <Select size="small">
+          <Select.Option value="auto">自动</Select.Option>
+          <Select.Option value="flex-start">起始</Select.Option>
+          <Select.Option value="center">居中</Select.Option>
+          <Select.Option value="flex-end">结束</Select.Option>
+          <Select.Option value="stretch">拉伸</Select.Option>
+          <Select.Option value="baseline">基线</Select.Option>
+        </Select>
+      </Form.Item>
+    </PanelSection>
+  );
 
-  // 间距面板 - Chrome DevTools 风格盒子模型
-  const spacingPanel = {
-    key: 'spacing',
-    label: '间距',
-    children: <BoxModelInput />,
-  };
+  // 间距分区
+  const renderSpacingSection = () => (
+    <PanelSection title="Spacing">
+      <CompactSpacingInput />
+    </PanelSection>
+  );
 
-  // 样式面板
-  const stylePanel = {
-    key: 'style',
-    label: '样式',
-    children: (
-      <>
-        <Form.Item name="backgroundColor" label="背景颜色" style={{ marginBottom: 12 }}>
-          <ColorPicker size="small" showText />
-        </Form.Item>
-        <Form.Item name="cornerRadius" label="圆角" style={{ marginBottom: 12 }}>
+  // 样式分区
+  const renderStyleSection = () => (
+    <PanelSection title="Fill & Stroke">
+      <Form.Item name="backgroundColor" label="背景" style={{ marginBottom: 0 }}>
+        <ColorPicker size="small" showText />
+      </Form.Item>
+      <div className="size-row">
+        <Form.Item name="cornerRadius" label="圆角" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} addonAfter="px" />
         </Form.Item>
-        <Form.Item name="borderWidth" label="边框宽度" style={{ marginBottom: 12 }}>
-          <InputNumber size="small" style={{ width: '100%' }} min={0} addonAfter="px" />
-        </Form.Item>
-        <Form.Item name="borderColor" label="边框颜色" style={{ marginBottom: 12 }}>
-          <ColorPicker size="small" showText />
-        </Form.Item>
-        <Form.Item name="opacity" label="透明度" style={{ marginBottom: 12 }}>
+        <Form.Item name="opacity" label="透明度" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} max={1} step={0.1} />
         </Form.Item>
-        <Form.Item name="overflow" label="溢出处理" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            size="small"
-            options={[
-              { label: '显示', value: 'visible' },
-              { label: '隐藏', value: 'hidden' },
-              { label: '滚动', value: 'scroll' },
-            ]}
-          />
+      </div>
+      <div className="size-row">
+        <Form.Item name="borderWidth" label="边框" style={{ marginBottom: 0, flex: 1 }}>
+          <InputNumber size="small" style={{ width: '100%' }} min={0} addonAfter="px" />
         </Form.Item>
-      </>
-    ),
-  };
-
-  // 文本属性面板
-  const textPanel = {
-    key: 'text',
-    label: '文本',
-    children: (
-      <>
-        <Form.Item name="text" label="文本内容" style={{ marginBottom: 12 }}>
-          <Input.TextArea rows={3} />
-        </Form.Item>
-        <Form.Item name="fontSize" label="字体大小" style={{ marginBottom: 12 }}>
-          <InputNumber size="small" style={{ width: '100%' }} min={1} addonAfter="px" />
-        </Form.Item>
-        <Form.Item name="fontWeight" label="字重" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            size="small"
-            options={[
-              { label: '常规', value: 'normal' },
-              { label: '中等', value: '500' },
-              { label: '粗体', value: 'bold' },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item name="textColor" label="文本颜色" style={{ marginBottom: 12 }}>
+        <Form.Item name="borderColor" label="边框色" style={{ marginBottom: 0, flex: 1 }}>
           <ColorPicker size="small" showText />
         </Form.Item>
-        <Form.Item name="textAlign" label="对齐方式" style={{ marginBottom: 12 }}>
+      </div>
+      <Form.Item name="overflow" label="溢出" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: '显示', value: 'visible' },
+            { label: '隐藏', value: 'hidden' },
+            { label: '滚动', value: 'scroll' },
+          ]}
+        />
+      </Form.Item>
+    </PanelSection>
+  );
+
+  // 文本分区
+  const renderTextSection = () => (
+    <PanelSection title="Text">
+      <Form.Item name="text" label="内容" style={{ marginBottom: 0 }}>
+        <Input.TextArea rows={2} style={{ fontSize: 12 }} />
+      </Form.Item>
+      <div className="size-row">
+        <Form.Item name="fontSize" label="字号" style={{ marginBottom: 0, flex: 1 }}>
+          <InputNumber size="small" style={{ width: '100%' }} min={1} addonAfter="px" />
+        </Form.Item>
+        <Form.Item name="fontWeight" label="字重" style={{ marginBottom: 0, flex: 1 }}>
           <Segmented
-            block
+            size="small"
             options={[
-              { label: <Tooltip title="左对齐"><AlignLeftOutlined /></Tooltip>, value: 'left' },
-              { label: <Tooltip title="居中"><AlignCenterOutlined /></Tooltip>, value: 'center' },
-              { label: <Tooltip title="右对齐"><AlignRightOutlined /></Tooltip>, value: 'right' },
+              { label: 'R', value: 'normal' },
+              { label: 'M', value: '500' },
+              { label: 'B', value: 'bold' },
             ]}
           />
         </Form.Item>
-        <Form.Item name="lineHeight" label="行高" style={{ marginBottom: 12 }}>
+      </div>
+      <Form.Item name="textColor" label="颜色" style={{ marginBottom: 0 }}>
+        <ColorPicker size="small" showText />
+      </Form.Item>
+      <Form.Item name="textAlign" label="对齐" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: <Tooltip title="左对齐"><AlignLeftOutlined /></Tooltip>, value: 'left' },
+            { label: <Tooltip title="居中"><AlignCenterOutlined /></Tooltip>, value: 'center' },
+            { label: <Tooltip title="右对齐"><AlignRightOutlined /></Tooltip>, value: 'right' },
+          ]}
+        />
+      </Form.Item>
+      <div className="size-row">
+        <Form.Item name="lineHeight" label="行高" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={1} step={0.1} />
         </Form.Item>
-        <Form.Item name="numberOfLines" label="最大行数" style={{ marginBottom: 12 }}>
-          <InputNumber size="small" style={{ width: '100%' }} min={0} placeholder="0 表示不限制" />
+        <Form.Item name="numberOfLines" label="行数" style={{ marginBottom: 0, flex: 1 }}>
+          <InputNumber size="small" style={{ width: '100%' }} min={0} placeholder="0=不限" />
         </Form.Item>
-      </>
-    ),
-  };
+      </div>
+    </PanelSection>
+  );
 
-  // 图片属性面板
-  const imagePanel = {
-    key: 'image',
-    label: '图片',
-    children: (
-      <>
-        <Form.Item name="src" label="图片地址" style={{ marginBottom: 12 }}>
-          <Input size="small" placeholder="输入图片URL" />
-        </Form.Item>
-        <Form.Item name="contentMode" label="填充模式" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            size="small"
-            options={[
-              { label: '包含', value: 'scaleAspectFit' },
-              { label: '覆盖', value: 'scaleAspectFill' },
-              { label: '填充', value: 'scaleToFill' },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item name="aspectRatio" label="宽高比" style={{ marginBottom: 12 }}>
-          <InputNumber size="small" style={{ width: '100%' }} min={0} step={0.1} placeholder="例如: 1.5" />
-        </Form.Item>
-      </>
-    ),
-  };
+  // 图片分区
+  const renderImageSection = () => (
+    <PanelSection title="Image">
+      <Form.Item name="src" label="URL" style={{ marginBottom: 0 }}>
+        <Input size="small" placeholder="输入图片地址" />
+      </Form.Item>
+      <Form.Item name="contentMode" label="模式" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: '包含', value: 'scaleAspectFit' },
+            { label: '覆盖', value: 'scaleAspectFill' },
+            { label: '填充', value: 'scaleToFill' },
+          ]}
+        />
+      </Form.Item>
+      <Form.Item name="aspectRatio" label="宽高比" style={{ marginBottom: 0 }}>
+        <InputNumber size="small" style={{ width: '100%' }} min={0} step={0.1} placeholder="例如: 1.5" />
+      </Form.Item>
+    </PanelSection>
+  );
 
-  // 按钮属性面板
-  const buttonPanel = {
-    key: 'button',
-    label: '按钮',
-    children: (
-      <>
-        <Form.Item name="title" label="按钮文本" style={{ marginBottom: 12 }}>
-          <Input size="small" />
-        </Form.Item>
-        <Form.Item name="fontSize" label="字体大小" style={{ marginBottom: 12 }}>
+  // 按钮分区
+  const renderButtonSection = () => (
+    <PanelSection title="Button">
+      <Form.Item name="title" label="文本" style={{ marginBottom: 0 }}>
+        <Input size="small" />
+      </Form.Item>
+      <div className="size-row">
+        <Form.Item name="fontSize" label="字号" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={1} addonAfter="px" />
         </Form.Item>
-        <Form.Item name="fontWeight" label="字重" style={{ marginBottom: 12 }}>
+        <Form.Item name="fontWeight" label="字重" style={{ marginBottom: 0, flex: 1 }}>
           <Segmented
-            block
             size="small"
             options={[
-              { label: '常规', value: 'normal' },
-              { label: '中等', value: '500' },
-              { label: '粗体', value: 'bold' },
+              { label: 'R', value: 'normal' },
+              { label: 'M', value: '500' },
+              { label: 'B', value: 'bold' },
             ]}
           />
         </Form.Item>
-        <Form.Item name="textColor" label="文本颜色" style={{ marginBottom: 12 }}>
-          <ColorPicker size="small" showText />
-        </Form.Item>
-      </>
-    ),
-  };
+      </div>
+      <Form.Item name="textColor" label="颜色" style={{ marginBottom: 0 }}>
+        <ColorPicker size="small" showText />
+      </Form.Item>
+    </PanelSection>
+  );
 
-  // 列表属性面板
-  const listPanel = {
-    key: 'list',
-    label: '列表',
-    children: (
-      <>
-        <Form.Item name="direction" label="滚动方向" style={{ marginBottom: 12 }}>
-          <Segmented
-            block
-            options={[
-              { label: <Tooltip title="纵向"><ArrowDownOutlined /></Tooltip>, value: 'vertical' },
-              { label: <Tooltip title="横向"><ArrowRightOutlined /></Tooltip>, value: 'horizontal' },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item name="columns" label="列数" style={{ marginBottom: 12 }}>
+  // 列表分区
+  const renderListSection = () => (
+    <PanelSection title="List">
+      <Form.Item name="direction" label="方向" style={{ marginBottom: 0 }}>
+        <Segmented
+          block
+          size="small"
+          options={[
+            { label: <Tooltip title="纵向"><ArrowDownOutlined /></Tooltip>, value: 'vertical' },
+            { label: <Tooltip title="横向"><ArrowRightOutlined /></Tooltip>, value: 'horizontal' },
+          ]}
+        />
+      </Form.Item>
+      <div className="size-row">
+        <Form.Item name="columns" label="列数" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={1} />
         </Form.Item>
-        <Form.Item name="rows" label="行数" style={{ marginBottom: 12 }}>
+        <Form.Item name="rows" label="行数" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={1} />
         </Form.Item>
-        <Form.Item name="rowSpacing" label="行间距" style={{ marginBottom: 12 }}>
+      </div>
+      <div className="size-row">
+        <Form.Item name="rowSpacing" label="行距" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} />
         </Form.Item>
-        <Form.Item name="columnSpacing" label="列间距" style={{ marginBottom: 12 }}>
+        <Form.Item name="columnSpacing" label="列距" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} />
         </Form.Item>
-        <Form.Item name="itemWidth" label="Item 宽度" style={{ marginBottom: 12 }}>
+      </div>
+      <div className="size-row">
+        <Form.Item name="itemWidth" label="宽" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} />
         </Form.Item>
-        <Form.Item name="itemHeight" label="Item 高度" style={{ marginBottom: 12 }}>
+        <Form.Item name="itemHeight" label="高" style={{ marginBottom: 0, flex: 1 }}>
           <InputNumber size="small" style={{ width: '100%' }} min={0} />
         </Form.Item>
-        <Form.Item name="showsIndicator" label="显示滚动条" valuePropName="checked" style={{ marginBottom: 12 }}>
+      </div>
+      <div className="size-row">
+        <Form.Item name="showsIndicator" label="滚动条" valuePropName="checked" style={{ marginBottom: 0, flex: 1 }}>
           <Switch size="small" />
         </Form.Item>
-        <Form.Item name="bounces" label="弹性效果" valuePropName="checked" style={{ marginBottom: 12 }}>
+        <Form.Item name="bounces" label="弹性" valuePropName="checked" style={{ marginBottom: 0, flex: 1 }}>
           <Switch size="small" />
         </Form.Item>
-        <Form.Item name="isPagingEnabled" label="分页滚动" valuePropName="checked" style={{ marginBottom: 12 }}>
-          <Switch size="small" />
-        </Form.Item>
-      </>
-    ),
-  };
+      </div>
+      <Form.Item name="isPagingEnabled" label="分页" valuePropName="checked" style={{ marginBottom: 0 }}>
+        <Switch size="small" />
+      </Form.Item>
+    </PanelSection>
+  );
 
-  const getCollapseItems = (): CollapseProps['items'] => {
-    const items: CollapseProps['items'] = [];
+  // 根据组件类型组装分区
+  const renderSections = () => {
+    const sections: React.ReactNode[] = [];
 
-    items.push(sizePanel);
+    // 所有组件都有尺寸
+    sections.push(<Fragment key="size">{renderSizeSection()}</Fragment>);
 
     switch (component.type) {
       case 'container':
-        items.push(flexboxPanel);
-        items.push(spacingPanel);
-        items.push(stylePanel);
+        sections.push(<Fragment key="layout">{renderFlexboxSection()}</Fragment>);
+        sections.push(<Fragment key="spacing">{renderSpacingSection()}</Fragment>);
+        sections.push(<Fragment key="style">{renderStyleSection()}</Fragment>);
         break;
 
       case 'text':
-        items.push(textPanel);
-        items.push(flexItemPanel);
-        items.push(spacingPanel);
-        items.push(stylePanel);
+        sections.push(<Fragment key="text">{renderTextSection()}</Fragment>);
+        sections.push(<Fragment key="flexItem">{renderFlexItemSection()}</Fragment>);
+        sections.push(<Fragment key="spacing">{renderSpacingSection()}</Fragment>);
+        sections.push(<Fragment key="style">{renderStyleSection()}</Fragment>);
         break;
 
       case 'image':
-        items.push(imagePanel);
-        items.push(flexItemPanel);
-        items.push(spacingPanel);
-        items.push(stylePanel);
+        sections.push(<Fragment key="image">{renderImageSection()}</Fragment>);
+        sections.push(<Fragment key="flexItem">{renderFlexItemSection()}</Fragment>);
+        sections.push(<Fragment key="spacing">{renderSpacingSection()}</Fragment>);
+        sections.push(<Fragment key="style">{renderStyleSection()}</Fragment>);
         break;
 
       case 'button':
-        items.push(buttonPanel);
-        items.push(flexItemPanel);
-        items.push(spacingPanel);
-        items.push(stylePanel);
+        sections.push(<Fragment key="button">{renderButtonSection()}</Fragment>);
+        sections.push(<Fragment key="flexItem">{renderFlexItemSection()}</Fragment>);
+        sections.push(<Fragment key="spacing">{renderSpacingSection()}</Fragment>);
+        sections.push(<Fragment key="style">{renderStyleSection()}</Fragment>);
         break;
 
       case 'list':
-        items.push(listPanel);
-        items.push(flexboxPanel);
-        items.push(spacingPanel);
-        items.push(stylePanel);
+        sections.push(<Fragment key="list">{renderListSection()}</Fragment>);
+        sections.push(<Fragment key="layout">{renderFlexboxSection()}</Fragment>);
+        sections.push(<Fragment key="spacing">{renderSpacingSection()}</Fragment>);
+        sections.push(<Fragment key="style">{renderStyleSection()}</Fragment>);
         break;
     }
 
-    return items;
+    return sections;
   };
 
   // 属性 Tab 内容
   const propsTabContent = (
-    <div style={{ flex: 1, overflow: 'auto', padding: '0 16px 16px' }}>
+    <div style={{ flex: 1, overflow: 'auto' }}>
       <Form
         form={form}
         layout="vertical"
         size="small"
         onValuesChange={handleValuesChange}
       >
-        <Collapse 
-          items={getCollapseItems()} 
-          defaultActiveKey={['size', 'flexbox', 'text', 'image', 'button', 'list']} 
-          ghost 
-          size="small"
-        />
+        {renderSections()}
       </Form>
     </div>
   );
@@ -701,22 +719,26 @@ export const PropertyPanel = () => {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 组件信息头部 */}
-      <div style={{ padding: '12px 16px 0' }}>
-        <div style={{ marginBottom: 8 }}>
-          <Typography.Text strong>{componentDef?.name}</Typography.Text>
-          <Divider style={{ margin: '8px 0' }} />
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            ID: {component.id}
-          </Typography.Text>
-        </div>
+      <div style={{
+        padding: '10px 16px',
+        borderBottom: '1px solid #f0f0f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <Typography.Text strong style={{ fontSize: 13 }}>{componentDef?.name}</Typography.Text>
+        <Typography.Text type="secondary" style={{ fontSize: 11 }}>
+          {component.id}
+        </Typography.Text>
       </div>
       {/* Tabs */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <Tabs
           items={tabItems}
           defaultActiveKey="props"
           size="small"
-          style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+          className="property-panel-tabs"
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}
           tabBarStyle={{ paddingLeft: 16, paddingRight: 16, marginBottom: 0 }}
         />
       </div>

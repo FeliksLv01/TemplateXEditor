@@ -46,6 +46,8 @@ const useEditorStore = create<EditorState>()(
         setRootComponent: (component) => {
           set(
             (state) => ({
+              rootComponent: component,
+              selectedComponentId: null,
               history: {
                 past: [...state.history.past, state.history.present].filter(Boolean),
                 present: component,

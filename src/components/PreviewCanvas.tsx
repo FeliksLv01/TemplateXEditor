@@ -1,12 +1,11 @@
-import { Empty, Typography, Breadcrumb } from 'antd';
+import { Empty, Breadcrumb } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
 import { useMemo } from 'react';
 import useEditorStore from '@/store/editorStore';
 import { ComponentRenderer } from './ComponentRenderer';
 import { findPathById } from '@/utils/treeHelper';
 import { getComponentDefinition } from '@/config/componentRegistry';
-
-const { Title } = Typography;
+import { Toolbar } from './Toolbar';
 
 export const PreviewCanvas = () => {
   const { rootComponent, selectedComponentId, selectComponent, mockData } = useEditorStore();
@@ -36,12 +35,17 @@ export const PreviewCanvas = () => {
         style={{
           height: '100%',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          flexDirection: 'column',
           backgroundColor: '#f5f5f5',
         }}
       >
-        <Empty description="暂无组件，请从左侧面板添加" />
+        <div className="canvas-topbar">
+          <div />
+          <Toolbar />
+        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Empty description="暂无组件，请从左侧面板添加" />
+        </div>
       </div>
     );
   }
@@ -50,53 +54,24 @@ export const PreviewCanvas = () => {
     <div
       style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#f5f5f5' }}
     >
-      <div
-        style={{
-          padding: '12px 16px',
-          backgroundColor: '#fff',
-          borderBottom: '1px solid #e8e8e8',
-        }}
-      >
-        <Title level={5} style={{ margin: 0 }}>
-          预览
-        </Title>
-      </div>
-      <div
-        style={{
-          padding: '12px 16px',
-          backgroundColor: '#fff',
-          borderBottom: '1px solid #e8e8e8',
-        }}
-      >
+      <div className="canvas-topbar">
         <Breadcrumb
           items={[
             { key: 'home', title: <HomeOutlined /> },
             ...selectedPath.map((item, index) => ({ title: item, key: `path-${index}` })),
           ]}
         />
+        <Toolbar />
       </div>
       <div
         style={{
           flex: 1,
           overflow: 'auto',
           padding: 24,
-          display: 'flex',
-          justifyContent: 'center',
         }}
         onClick={handleCanvasClick}
       >
-        <div
-          style={{
-            minWidth: 320,
-            maxWidth: '100%',
-            backgroundColor: '#fff',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-            borderRadius: 4,
-            overflow: 'hidden',
-          }}
-        >
-          <ComponentRenderer component={rootComponent} selectedId={selectedComponentId} onSelect={selectComponent} mockData={mockData} />
-        </div>
+        <ComponentRenderer component={rootComponent} selectedId={selectedComponentId} onSelect={selectComponent} mockData={mockData} />
       </div>
     </div>
   );
