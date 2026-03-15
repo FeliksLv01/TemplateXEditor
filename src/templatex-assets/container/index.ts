@@ -15,9 +15,7 @@ export const containerAssetParams: ComponentAssetParams<any> = {
     props: {},
     style: {
       flexDirection: 'column',
-      padding: 16,
-      backgroundColor: '#FFFFFF',
-      width: '100%',
+      width: 'auto',
       height: 'auto',
     },
   },

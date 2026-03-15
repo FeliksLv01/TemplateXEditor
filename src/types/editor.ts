@@ -7,6 +7,9 @@ export interface EditorState {
   // 当前选中组件 ID
   selectedComponentId: string | null;
 
+  // 模拟数据（用于预览时解析 bindings 表达式）
+  mockData: Record<string, any>;
+
   // 历史记录
   history: {
     past: (DSLComponent | null)[];
@@ -27,6 +30,7 @@ export interface EditorState {
   updateComponent: (id: string, updates: Partial<DSLComponent>) => void;
   moveComponent: (componentId: string, newParentId: string, newIndex?: number) => void;
   selectComponent: (id: string | null) => void;
+  setMockData: (data: Record<string, any>) => void;
   undo: () => void;
   redo: () => void;
   copyComponent: (id: string) => void;
@@ -41,6 +45,8 @@ export interface DSLComponent {
   type: string;
   props: Record<string, any>;
   style: Record<string, any>;
+  bindings?: Record<string, string>;
+  events?: Record<string, any>;
   children?: DSLComponent[];
 }
 

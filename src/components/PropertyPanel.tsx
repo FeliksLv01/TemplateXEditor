@@ -1,7 +1,8 @@
-import { Empty, Form, Input, InputNumber, Select, ColorPicker, Switch, Collapse, Tooltip, Segmented } from 'antd';
+import { Empty, Form, Input, InputNumber, Select, ColorPicker, Switch, Collapse, Tooltip, Segmented, Tabs, Alert, Button } from 'antd';
 import { Typography, Divider } from 'antd';
 import type { CollapseProps } from 'antd';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
+import { JsonEditor } from './JsonEditor';
 import {
   ArrowRightOutlined,
   ArrowDownOutlined,
@@ -21,8 +22,189 @@ import { getComponentDefinition } from '@/config/componentRegistry';
 import { SizeInput, BoxModelInput } from './property-items';
 import { cleanColorValue } from '@/utils/dslCleaner';
 
-const { Title } = Typography;
+// Typography sub-components used inline
 
+// ============================================================
+// 数据绑定 Tab
+// ============================================================
+const DataBindingTab: React.FC<{
+  component: any;
+  selectedComponentId: string;
+  updateComponent: (id: string, updates: any) => void;
+}> = ({ component, selectedComponentId, updateComponent }) => {
+  const [jsonText, setJsonText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // 组件切换或 bindings 外部变化时，重置编辑器内容
+  useEffect(() => {
+    const bindings = component.bindings || {};
+    setJsonText(JSON.stringify(bindings, null, 2));
+    setError(null);
+    setIsDirty(false);
+  }, [component.id, component.bindings]);
+
+  const handleChange = useCallback((text: string) => {
+    setJsonText(text);
+    setIsDirty(true);
+
+    // 实时校验 JSON 格式
+    if (text.trim() === '' || text.trim() === '{}') {
+      setError(null);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(text);
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+        setError('必须是一个 JSON 对象');
+        return;
+      }
+      // 校验每个 value 必须是 string
+      for (const [key, value] of Object.entries(parsed)) {
+        if (typeof value !== 'string') {
+          setError(`"${key}" 的值必须是字符串（表达式）`);
+          return;
+        }
+      }
+      setError(null);
+    } catch {
+      setError('JSON 格式错误');
+    }
+  }, []);
+
+  const handleApply = useCallback(() => {
+    if (error) return;
+    try {
+      const parsed = jsonText.trim() === '' ? {} : JSON.parse(jsonText);
+      const bindings = Object.keys(parsed).length > 0 ? parsed : undefined;
+      updateComponent(selectedComponentId, { bindings });
+      setIsDirty(false);
+    } catch {
+      setError('JSON 格式错误');
+    }
+  }, [jsonText, error, selectedComponentId, updateComponent]);
+
+  return (
+    <div style={{ padding: '0 16px 16px' }}>
+      <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 12 }}>
+        将组件的 props 或 style 属性绑定到数据表达式。key 为属性名，value 为 {'${expression}'} 表达式。
+      </Typography.Paragraph>
+      <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 8 }}>
+        示例：{`{ "text": "\${item.title}", "textColor": "\${item.isVip ? '#FF0000' : '#333'}" }`}
+      </Typography.Text>
+      <JsonEditor
+        value={jsonText}
+        onChange={handleChange}
+        minHeight="200px"
+        maxHeight="400px"
+        placeholder={'{\n  "text": "${item.title}"\n}'}
+      />
+      {error && (
+        <Alert message={error} type="error" showIcon style={{ marginTop: 8 }} />
+      )}
+      <Button
+        type="primary"
+        size="small"
+        block
+        disabled={!!error || !isDirty}
+        onClick={handleApply}
+        style={{ marginTop: 8 }}
+      >
+        应用绑定
+      </Button>
+    </div>
+  );
+};
+
+// ============================================================
+// 事件 Tab
+// ============================================================
+const EventTab: React.FC<{
+  component: any;
+  selectedComponentId: string;
+  updateComponent: (id: string, updates: any) => void;
+}> = ({ component, selectedComponentId, updateComponent }) => {
+  const [jsonText, setJsonText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    const events = component.events || {};
+    setJsonText(JSON.stringify(events, null, 2));
+    setError(null);
+    setIsDirty(false);
+  }, [component.id, component.events]);
+
+  const handleChange = useCallback((text: string) => {
+    setJsonText(text);
+    setIsDirty(true);
+
+    if (text.trim() === '' || text.trim() === '{}') {
+      setError(null);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(text);
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+        setError('必须是一个 JSON 对象');
+        return;
+      }
+      setError(null);
+    } catch {
+      setError('JSON 格式错误');
+    }
+  }, []);
+
+  const handleApply = useCallback(() => {
+    if (error) return;
+    try {
+      const parsed = jsonText.trim() === '' ? {} : JSON.parse(jsonText);
+      const events = Object.keys(parsed).length > 0 ? parsed : undefined;
+      updateComponent(selectedComponentId, { events });
+      setIsDirty(false);
+    } catch {
+      setError('JSON 格式错误');
+    }
+  }, [jsonText, error, selectedComponentId, updateComponent]);
+
+  return (
+    <div style={{ padding: '0 16px 16px' }}>
+      <Typography.Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 12 }}>
+        配置组件事件。key 为事件名（如 onTap），value 为 URL 字符串或事件配置对象。
+      </Typography.Paragraph>
+      <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 8 }}>
+        简写：{`{ "onTap": "app://detail?id=123" }`}
+      </Typography.Text>
+      <Typography.Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 8 }}>
+        完整：{`{ "onTap": { "url": "app://follow", "params": { "userId": "\${user.id}" } } }`}
+      </Typography.Text>
+      <JsonEditor
+        value={jsonText}
+        onChange={handleChange}
+        minHeight="200px"
+        maxHeight="400px"
+        placeholder={'{\n  "onTap": "app://detail?id=123"\n}'}
+      />
+      {error && (
+        <Alert message={error} type="error" showIcon style={{ marginTop: 8 }} />
+      )}
+      <Button
+        type="primary"
+        size="small"
+        block
+        disabled={!!error || !isDirty}
+        onClick={handleApply}
+        style={{ marginTop: 8 }}
+      >
+        应用事件
+      </Button>
+    </div>
+  );
+};
+
+// ============================================================
+// 属性面板主组件
+// ============================================================
 export const PropertyPanel = () => {
   const { rootComponent, selectedComponentId, updateComponent } = useEditorStore();
   const [form] = Form.useForm();
@@ -72,7 +254,7 @@ export const PropertyPanel = () => {
   // Props 属性列表 - 这些属性存储在 props 中，其他的存储在 style 中
   const PROPS_KEYS = [
     // 通用
-    'text', 'title', 'src', 'items',
+    'text', 'title', 'src', 'contentMode', 'items',
     // List 特有
     'direction', 'columns', 'rows', 'rowSpacing', 'columnSpacing',
     'showsIndicator', 'bounces', 'isPagingEnabled',
@@ -197,9 +379,6 @@ export const PropertyPanel = () => {
             <Select.Option value="space-between">两端对齐</Select.Option>
             <Select.Option value="space-around">分散对齐</Select.Option>
           </Select>
-        </Form.Item>
-        <Form.Item name="gap" label="间距 (gap)" style={{ marginBottom: 12 }}>
-          <InputNumber size="small" style={{ width: '100%' }} min={0} />
         </Form.Item>
       </>
     ),
@@ -332,14 +511,14 @@ export const PropertyPanel = () => {
         <Form.Item name="src" label="图片地址" style={{ marginBottom: 12 }}>
           <Input size="small" placeholder="输入图片URL" />
         </Form.Item>
-        <Form.Item name="objectFit" label="填充模式" style={{ marginBottom: 12 }}>
+        <Form.Item name="contentMode" label="填充模式" style={{ marginBottom: 12 }}>
           <Segmented
             block
             size="small"
             options={[
-              { label: '包含', value: 'contain' },
-              { label: '覆盖', value: 'cover' },
-              { label: '填充', value: 'fill' },
+              { label: '包含', value: 'scaleAspectFit' },
+              { label: '覆盖', value: 'scaleAspectFill' },
+              { label: '填充', value: 'scaleToFill' },
             ]}
           />
         </Form.Item>
@@ -470,32 +649,76 @@ export const PropertyPanel = () => {
     return items;
   };
 
+  // 属性 Tab 内容
+  const propsTabContent = (
+    <div style={{ flex: 1, overflow: 'auto', padding: '0 16px 16px' }}>
+      <Form
+        form={form}
+        layout="vertical"
+        size="small"
+        onValuesChange={handleValuesChange}
+      >
+        <Collapse 
+          items={getCollapseItems()} 
+          defaultActiveKey={['size', 'flexbox', 'text', 'image', 'button', 'list']} 
+          ghost 
+          size="small"
+        />
+      </Form>
+    </div>
+  );
+
+  const tabItems = [
+    {
+      key: 'props',
+      label: '属性',
+      children: propsTabContent,
+    },
+    {
+      key: 'bindings',
+      label: '数据绑定',
+      children: (
+        <DataBindingTab
+          component={component}
+          selectedComponentId={selectedComponentId!}
+          updateComponent={updateComponent}
+        />
+      ),
+    },
+    {
+      key: 'events',
+      label: '事件',
+      children: (
+        <EventTab
+          component={component}
+          selectedComponentId={selectedComponentId!}
+          updateComponent={updateComponent}
+        />
+      ),
+    },
+  ];
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Title level={5} style={{ padding: '16px 16px 12px', margin: 0 }}>
-        属性面板
-      </Title>
-      <div style={{ flex: 1, overflow: 'auto', padding: '0 16px 16px' }}>
-        <div style={{ marginBottom: 16 }}>
+      {/* 组件信息头部 */}
+      <div style={{ padding: '12px 16px 0' }}>
+        <div style={{ marginBottom: 8 }}>
           <Typography.Text strong>{componentDef?.name}</Typography.Text>
           <Divider style={{ margin: '8px 0' }} />
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             ID: {component.id}
           </Typography.Text>
         </div>
-        <Form
-          form={form}
-          layout="vertical"
+      </div>
+      {/* Tabs */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <Tabs
+          items={tabItems}
+          defaultActiveKey="props"
           size="small"
-          onValuesChange={handleValuesChange}
-        >
-          <Collapse 
-            items={getCollapseItems()} 
-            defaultActiveKey={['size', 'flexbox', 'text', 'image', 'button', 'list']} 
-            ghost 
-            size="small"
-          />
-        </Form>
+          style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+          tabBarStyle={{ paddingLeft: 16, paddingRight: 16, marginBottom: 0 }}
+        />
       </div>
     </div>
   );

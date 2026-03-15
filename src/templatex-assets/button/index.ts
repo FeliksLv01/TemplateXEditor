@@ -19,7 +19,7 @@ export const buttonAssetParams: ComponentAssetParams<any> = {
       backgroundColor: '#1890FF',
       cornerRadius: 8,
       textColor: '#FFFFFF',
-      fontWeight: '500',
+      fontWeight: 'normal',
       width: 'auto',
       height: 44,
     },

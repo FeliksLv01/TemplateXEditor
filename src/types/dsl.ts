@@ -3,6 +3,8 @@ export interface DSLComponent {
   id: string;
   style?: Record<string, any>;
   props?: Record<string, any>;
+  bindings?: Record<string, string>;
+  events?: Record<string, any>;
   children?: DSLComponent[];
 }
 
@@ -11,5 +13,7 @@ export interface TemplateXDSL {
   id: string;
   style?: Record<string, any>;
   props?: Record<string, any>;
+  bindings?: Record<string, string>;
+  events?: Record<string, any>;
   children?: DSLComponent[];
 }

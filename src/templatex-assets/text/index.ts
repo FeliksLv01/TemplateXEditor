@@ -18,9 +18,8 @@ export const textAssetParams: ComponentAssetParams<any> = {
     style: {
       fontSize: 14,
       fontWeight: 'normal',
-      textColor: '#333333',
+      textColor: '#000000',
       textAlign: 'left',
-      lineHeight: 1.5,
     },
   },
   codeEmitter: textCodeEmitter as any,

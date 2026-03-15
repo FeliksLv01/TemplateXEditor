@@ -9,7 +9,7 @@ import { getComponentDefinition } from '@/config/componentRegistry';
 const { Title } = Typography;
 
 export const PreviewCanvas = () => {
-  const { rootComponent, selectedComponentId, selectComponent } = useEditorStore();
+  const { rootComponent, selectedComponentId, selectComponent, mockData } = useEditorStore();
 
   const selectedPath = useMemo(() => {
     if (!rootComponent || !selectedComponentId) return [];
@@ -95,7 +95,7 @@ export const PreviewCanvas = () => {
             overflow: 'hidden',
           }}
         >
-          <ComponentRenderer component={rootComponent} selectedId={selectedComponentId} onSelect={selectComponent} />
+          <ComponentRenderer component={rootComponent} selectedId={selectedComponentId} onSelect={selectComponent} mockData={mockData} />
         </div>
       </div>
     </div>

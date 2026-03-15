@@ -115,7 +115,7 @@ export function updateComponentById(
   updates: Partial<DSLComponent>
 ): DSLComponent {
   if (root.id === componentId) {
-    return {
+    const result: DSLComponent = {
       ...root,
       props: {
         ...root.props,
@@ -126,6 +126,14 @@ export function updateComponentById(
         ...updates.style,
       },
     };
+    // bindings 和 events 使用整体替换（JSON 编辑器直接提供完整对象）
+    if (updates.bindings !== undefined) {
+      result.bindings = updates.bindings;
+    }
+    if (updates.events !== undefined) {
+      result.events = updates.events;
+    }
+    return result;
   }
   
   if (root.children) {

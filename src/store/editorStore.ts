@@ -34,6 +34,7 @@ const useEditorStore = create<EditorState>()(
       (set, get) => ({
         rootComponent: null,
         selectedComponentId: null,
+        mockData: {},
         history: {
           past: [],
           present: null,
@@ -199,6 +200,10 @@ const useEditorStore = create<EditorState>()(
           set({ selectedComponentId: id }, false, 'selectComponent');
         },
 
+        setMockData: (data) => {
+          set({ mockData: data }, false, 'setMockData');
+        },
+
         undo: () => {
           const { history } = get();
           if (history.past.length === 0) return;
@@ -342,6 +347,7 @@ const useEditorStore = create<EditorState>()(
         partialize: (state) => ({
           rootComponent: state.rootComponent,
           history: state.history,
+          mockData: state.mockData,
         }),
         // 从存储中恢复数据后清理颜色格式
         onRehydrateStorage: () => (state) => {

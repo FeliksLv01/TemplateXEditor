@@ -106,6 +106,16 @@ export const cleanComponentForExport = (component: DSLComponent): DSLComponent =
     style: cleanObjectColors(component.style || {}),
   };
 
+  // 保留非空的 bindings
+  if (component.bindings && Object.keys(component.bindings).length > 0) {
+    cleaned.bindings = { ...component.bindings };
+  }
+
+  // 保留非空的 events
+  if (component.events && Object.keys(component.events).length > 0) {
+    cleaned.events = { ...component.events };
+  }
+
   if (component.children && component.children.length > 0) {
     cleaned.children = component.children.map(cleanComponentForExport);
   }
